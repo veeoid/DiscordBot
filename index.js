@@ -1,7 +1,8 @@
-const {Client, Events, GatewayIntentBits, Collection} = require('discord.js');
+const {Client, Events, GatewayIntentBits, Collection, REST} = require('discord.js');
 const {token} = require('./config.json');
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
+const { request } = require('http');
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
@@ -14,20 +15,17 @@ client.once(Events.ClientReady, (readyClient) => {
 client.commands = new Collection();
 
 const foldersPath = path.join(__dirname, 'commands');
-console.log(foldersPath)
 const commandFolder = fs.readdirSync(foldersPath);
-console.log(commandFolder)
 
 for (const folder of commandFolder){
     const commandsPath = path.join(foldersPath, folder)
-    console.log(commandsPath)
     const commandFiles = fs.readdirSync(commandsPath).filter((file)=>file.endsWith('js'));
-    console.log(commandFiles)
+
 
     for (const file of commandFiles){
         const filePath = path.join(commandsPath, file)
-        console.log(filePath)
         const command = require(filePath)
+        
         if ('data' in command && 'execute' in command){
             client.commands.set(command.data.name, command);
         }
@@ -42,6 +40,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.log(interaction);
 
     const command = interaction.client.commands.get(interaction.commandName);
+    console.log('command')
 
     if (!command){
         console.error(`No command matching ${interaction.commandName} was found.`);
@@ -65,7 +64,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			});
         }
     }
-})
+});
 
-// client.login(token);
+// const rest = new REST().setToken(token);
+
+// (async () =>{
+//     try{
+//         console.log(`Started refreshing ${commands.length} application (/) commands.`);
+
+//         const data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
+// 		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+//     }
+//     catch(error){
+//         console.log(error);
+//     }
+// })();
+
+
+
+client.login(token);
 
